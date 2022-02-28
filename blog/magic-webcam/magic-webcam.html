@@ -1,0 +1,59 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>magic-webcam.md</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__html"><p>The <code>magic_webcam.py</code> can be used for presenting a paper on your desk or a close-enough whiteboard. Besides the packages mentioned in the following, you also need to have <strong>OpenCV</strong> installed. You can use this <a href="https://www.learnopencv.com/install-opencv3-on-ubuntu/">guide</a> for building the library from source or simply use <code>apt</code> package manager.</p>
+<pre><code>sudo apt install python-opencv
+</code></pre>
+<p>Keep in mind that building from source will have several considerable advantages. Ok let’s get to the business.</p>
+<p>Run the code using:</p>
+<pre><code>python magic_cam.py
+</code></pre>
+<p>As long as you have OpenCV installed, the python version doesn’t matter that much.</p>
+<p>After running the script, if everything goes well, you will see a “calibration” window. On this window, you must specify 4 points using your left mouse button. These points will be used for a perspective transformation. The selected coordinates will become <strong>Top Left</strong>, <strong>Top Right</strong>,  <strong>Bottom Left</strong> , and <strong>Bottom Right</strong> respectively.</p>
+<p>As you can see, the output of this code can be viewed in an OpenCV window. Unfortunately, that’s not always the case! You may also want to share the output in an online platform such as Skype(or any other application which uses your webcam). Of course, you can always use the “screen sharing” feature likely provided by the platform itself, however,  it would take too much unnecessary bandwidth and also, lower your computer’s performance during the presentation. In addition, your screen is being shared while all the actual resource needed is the camera stream!</p>
+<p>In the following, I will provide you a fairly simple way to stream this output(transformed images) as a fake webcam so hopefully you won’t have to share your entire screen ;)</p>
+<p>These instructions will work on Linux. Of course, you can still use the basic functionality(perspective transformation resulting in a window) on any operating system having <code>python</code> and <code>OpenCV</code> installed.</p>
+<h1 id="step-1">Step 1</h1>
+<p>First of all, we need a video device. Almost all of the applications using your webcam, will automatically search your computer’s video devices and provide you a list of cameras to use. Therefore, we will create a new one to let it be useable in such applications.</p>
+<p>To do so, we will use <a href="https://github.com/umlaeute/v4l2loopback">v4l2loopback</a>. There’s a great detailed guide on their README to help you install their module. I also took hints from the first answer on this <a href="https://unix.stackexchange.com/questions/528400/how-can-i-stream-my-desktop-screen-to-dev-video1-as-a-fake-webcam-on-linux?answertab=active#tab-top">question</a>. Make sure you install this module somewhere accessible enough!</p>
+<p>Here are the commands I used:</p>
+<pre><code>git clone https://github.com/umlaeute/v4l2loopback/
+cd v4l2loopback
+sudo make
+sudo make install
+sudo depmod -a
+</code></pre>
+<h1 id="step-2">Step 2</h1>
+<p>Now that the module is set, we must create our new video device. Keep in mind that you should run the following commands every time you reboot your Linux from the installation directory <code>[Your installation path]/v4l2loopback</code>. Consider adding these to <code>.bashrc</code> for avoiding to do so.</p>
+<pre><code>sudo modprobe videodev
+sudo insmod ./v4l2loopback.ko devices=1 video_nr=1 exclusive_caps=1
+</code></pre>
+<p>Now we must check whether the device is created. You can use either of the below commands:</p>
+<pre><code>ls -al /dev/video*
+v4l2-ctl --list-devices
+</code></pre>
+<h1 id="step-3">Step 3</h1>
+<p>Now we have our device, you may already be able to see it in the list of available webcams in different applications. But the problem is that it’s not currently streaming any data. So let’s fix it. Instead of showing each processed frame using <code>imshow()</code>, we will pipe the data to an <a href="https://ffmpeg.org">ffmpeg</a> command. The command will stream the frames into the newly created video device.</p>
+<p>To install ffmpeg:</p>
+<pre><code>sudo apt install ffmpeg
+</code></pre>
+<p>Now that we got everything set, the only thing left is to pipe the output to the right ffmpeg command. To enable piping on <code>magic_cam.py</code>, we will use the <code>--pipe on</code> option.</p>
+<p>So the command will be:</p>
+<pre><code>python magic_webcam.py --pipe on| ffmpeg -f rawvideo -pixel_format rgb24 -video_size 1280x720 -framerate 30 -i - -vcodec rawvideo -pix_fmt yuv420p -threads 0 -f v4l2 -vf 'scale=1280:720' -pixel_format rgb24 /dev/video1
+</code></pre>
+<p>Don’t forget to change the scale configuration based on your situation</p>
+<p>The <code>fastcam.py</code> is the same script which you can find outside of this directory named <code>goodcam.py</code>. It’s been used for better fps and lower delay. To be short, it uses a separate thread for reading the frames from the video source.</p>
+<p>Please refer to <a href="https://github.com/m-parchami/awsomecv/tree/master/magic_webcam">github repository</a> for the source codes.</p>
+<p>cheers.</p>
+</div>
+</body>
+
+</html>

@@ -1,0 +1,54 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blog</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link rel="stylesheet" href="../index.css" />
+    <script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+  </head>
+  <body>
+    <div class="fake-panel"></div>
+    <div class="panel">
+      <h2>Amin's Blog</h2>
+      <img src="/blog/img/profile.png" alt="amin" />
+      <p>
+        Hi, my name is Amin Parchami. Briefly introduce yourself here. You can
+        also provide a link to the about page.
+      </p>
+      <ul class="list">
+          
+        </li>
+        <li class="list-inline-item">
+          <a href="https://twitter.com/amin_prc"><i class="fa fa-twitter"></i></a>
+        </li>
+        <li class="list-inline-item">
+          <a href="https://www.linkedin.com/in/amin-parchami/"><i class="fa fa-linkedin"></i></a>
+        </li>
+        <li class="list-inline-item">
+          <a href="https://join.skype.com/invite/nyz0Qd7qkTKa"><i class="fa fa-skype"></i></a>
+        </li>
+        <li class="list-inline-item">
+          <a href="https://github.com/m-parchami"><i class="fa fa-github"></i></a>
+        </li>
+
+      </ul>
+      <hr />
+      <h4>
+        <a href="/blog"
+          ><i class="fa fa-home" aria-hidden="true"></i> Blog Home</a
+        >
+      </h4>
+      <h4>
+        <a href="/"><i class="fa fa-user" aria-hidden="true"></i> About Me</a>
+      </h4>
+    </div>
+    <div id="root" class="body"></div>
+    <script>
+      $("#root").load("./green-screen.html");
+    </script>
+  </body>
+</html>

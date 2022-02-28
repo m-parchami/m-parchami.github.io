@@ -1,0 +1,20 @@
+[
+  {
+    "id": "green-screen",
+    "date": "2020",
+    "title": "Green Screen",
+    "description": "In this tutorial I will try to help you get familiar with background subtraction, and some morphological operations. Then to see the results in practice..."
+  },
+  {
+    "id": "Interfacing-Assembly-with-C-for-Image-Processing",
+    "date": "2020",
+    "title": "Interfacing Assembly with C for Image Processing",
+    "description": "This is the template code I used to conduct final project of x86 Assembly course in KNTU, taught by Dr. Behrooz Nasihatkon in Spring 2020. The main idea of this project was to let students do a fairly simple image processing task in basic x86 Assembly..."
+  },
+  {
+    "id": "magic-webcam",
+    "date": "2020",
+    "title": "Magic Webcam",
+    "description": "he `magic_webcam.py` can be used for presenting a paper on your desk or a close-enough whiteboard. Besides the packages mentioned in the following..."
+  }
+]

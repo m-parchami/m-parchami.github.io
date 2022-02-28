@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>gree-screen.md</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__html"><h1 id="build-your-own-green-screen">Build your own Green Screen!</h1>
+<p>Hey there!<br>
+In this tutorial I will try to help you get familiar with background subtraction, and some morphological operations. Then to see the results in practice, we will build our own green screen ;). If you have already bought a green screen don’t worry, it is really unlikely that this method with this level of simplicity will out perform your actual one.</p>
+<h1 id="what-is-background-subtraction-and-why-bother">What is Background Subtraction and why bother?</h1>
+<p>Background Subtraction has been attracting many Computer Vision scientists in the past years. In my opinion, it mainly consists of two steps. Measuring the background, that is knowing the value each pixel must have to construct the background image. The second step is to process the differences of a frame and the stored background image and get the good stuff. Imagine a security guard staring multiple monitors every second to find out whether there’s a change in the scene (someone passing by etc.), however, with the help of background subtraction and some further processings, the guard can just wait for an alarm that indicates a change in the scene. This can even be used to reduce the amound of storage needed to keep the security tapes. The time periods that scene remains stable can be cut easily.</p>
+<h2 id="getting-the-background-image">Getting the background image</h2>
+<p>Depending on the situations and use cases, background measurement can be tricky. In an easy case, we assume that the scene itself is not changing at all. Not even in illumination. Therefore we can assume the pixel intensities will almost keep the same values over periods of time. But even with this, we can’t be sure on what’s the correct pixel value. The camera noise, no matter what restrictions you assume, are always there. Even with a fixed camera and a static scene, you can see the pixel values keep changing. This noise can harm our process in two ways. First, finding the right pixel value, and Second, deciding whether the change must be considered as new object.</p>
+<h3 id="a-quick-solution">A Quick Solution!</h3>
+<p>One of the easiest solutions is to avoid constructing background from a single image. We can use a short sequence of frames (remember the security camera example) and conclude the background image in a more robust manner. Since the camera noise often has Normal Distribution, using median (or even averaging) in a sequence of values will eventually discard the noise. Therefore all we need to do is to store couple of frames, do pixel-wise median over the sequence, and valla, a much more clean background image will be smiling at you. This is also great when the background itself tends to change gradually. It will take just a couple of frames to have the updated version.</p>
+<h3 id="enough-talking-show-me-the-code">Enough talking, show me the code!</h3>
+<p>Alright let’s see how easy it really is to get the background image with this trick. As I mentioned this method will require a few background frames to overcome the noise. So, we define a mode for capturing these background frames. We switch the modes with ‘b’ button.</p>
+<pre class=" language-python"><code class="prism  language-python"><span class="token keyword">import</span> cv2  
+<span class="token keyword">import</span> numpy <span class="token keyword">as</span> np  
+  
+cap <span class="token operator">=</span> cv2<span class="token punctuation">.</span>VideoCapture<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span> <span class="token comment"># If you have an additional webcam you may change this line</span>
+<span class="token builtin">buffer</span> <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>  
+mode <span class="token operator">=</span> <span class="token string">"capture"</span>  
+background <span class="token operator">=</span> <span class="token boolean">None</span>
+threshold <span class="token operator">=</span> <span class="token number">70</span>
+<span class="token keyword">while</span> <span class="token boolean">True</span><span class="token punctuation">:</span>  
+    ok<span class="token punctuation">,</span> frame <span class="token operator">=</span> cap<span class="token punctuation">.</span>read<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">if</span> <span class="token operator">not</span> ok<span class="token punctuation">:</span>
+	    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"Capture Ended!"</span><span class="token punctuation">)</span>
+	    <span class="token keyword">break</span>
+	cv2<span class="token punctuation">.</span>imshow<span class="token punctuation">(</span><span class="token string">"camera"</span><span class="token punctuation">,</span> frame<span class="token punctuation">)</span>  
+	key <span class="token operator">=</span> cv2<span class="token punctuation">.</span>waitKey<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span> <span class="token number">0xFF</span> <span class="token comment"># You may change this line if you need a specific FPS</span>
+	<span class="token keyword">if</span> key <span class="token operator">==</span> <span class="token builtin">ord</span><span class="token punctuation">(</span><span class="token string">'b'</span><span class="token punctuation">)</span><span class="token punctuation">:</span> 
+		<span class="token keyword">if</span> mode <span class="token operator">==</span> <span class="token string">"background"</span><span class="token punctuation">:</span>  <span class="token comment"># If it was taking background till now:</span>
+	    
+	        <span class="token comment"># Compute background and go to capture mode  </span>
+			background <span class="token operator">=</span> np<span class="token punctuation">.</span>median<span class="token punctuation">(</span><span class="token builtin">buffer</span><span class="token punctuation">,</span> axis <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">)</span>
+			
+			<span class="token comment"># In case you used other methods resulting in floating point pixels:</span>
+	        background <span class="token operator">=</span> np<span class="token punctuation">.</span>asarray<span class="token punctuation">(</span>background<span class="token punctuation">,</span> dtype <span class="token operator">=</span> np<span class="token punctuation">.</span>uint8<span class="token punctuation">)</span>
+	        
+			<span class="token comment"># Background is done, go to the capture (normal) mode</span>
+	        mode <span class="token operator">=</span> <span class="token string">"capture"</span>  
+	  
+	    <span class="token keyword">else</span><span class="token punctuation">:</span>  
+	        <span class="token comment"># Free the buffer for new background computation</span>
+			<span class="token builtin">buffer</span> <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>  
+			
+			<span class="token comment"># Switch the mode</span>
+	        mode <span class="token operator">=</span> <span class="token string">"background"</span>
+	        
+	<span class="token keyword">elif</span> key <span class="token operator">==</span> <span class="token builtin">ord</span><span class="token punctuation">(</span><span class="token string">'q'</span><span class="token punctuation">)</span><span class="token punctuation">:</span> <span class="token comment"># Just for ending the cycle  </span>
+       	    <span class="token keyword">break</span>
+</code></pre>
+<p>Ok now we have the code to compute the background. Let’s go through storing and showing the background frames.</p>
+<pre class=" language-python"><code class="prism  language-python">	<span class="token keyword">if</span> mode <span class="token operator">==</span> <span class="token string">"background"</span><span class="token punctuation">:</span>  
+	    <span class="token builtin">buffer</span><span class="token punctuation">.</span>append<span class="token punctuation">(</span>frame<span class="token punctuation">)</span>
+	<span class="token keyword">if</span> background <span class="token keyword">is</span> <span class="token operator">not</span> <span class="token boolean">None</span><span class="token punctuation">:</span> <span class="token comment"># We have a background computed  </span>
+		<span class="token comment"># This is just for you to check the computed background, comment these in later usages.</span>
+		cv2<span class="token punctuation">.</span>imshow<span class="token punctuation">(</span><span class="token string">"background"</span><span class="token punctuation">,</span> background<span class="token punctuation">)</span>  
+		cv2<span class="token punctuation">.</span>waitKey<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>
+</code></pre>
+<p>Ok now we have the background image. The next step is to subtract each frame from our background to get the green screen like output.<br>
+First we compute absolute difference between two images( captured frame and previously computer background). Then, in order to remove differences caused by noise, we apply a threshold to this difference. Unfortunately, this will not be enough to fix all of the noises. To do so, we take advantage of already implemented morphological operations in OpenCV. Make sure you read the docs properly. I will try to add images of each operation in the future.</p>
+<pre class=" language-python"><code class="prism  language-python">
+		sub_image <span class="token operator">=</span> cv2<span class="token punctuation">.</span>absdiff<span class="token punctuation">(</span>frame<span class="token punctuation">,</span> background<span class="token punctuation">)</span>
+                sub_image <span class="token operator">=</span> np<span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span>sub_image<span class="token punctuation">,</span> axis<span class="token operator">=</span><span class="token number">2</span><span class="token punctuation">)</span>
+
+		binary <span class="token operator">=</span> np<span class="token punctuation">.</span>zeros<span class="token punctuation">(</span>sub_image<span class="token punctuation">.</span>shape<span class="token punctuation">,</span> dtype<span class="token operator">=</span>np<span class="token punctuation">.</span>uint8<span class="token punctuation">)</span>  
+		binary<span class="token punctuation">[</span>sub_image <span class="token operator">&gt;</span> threshold<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token number">1</span>
+				
+		kernel <span class="token operator">=</span> np<span class="token punctuation">.</span>ones<span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token number">5</span><span class="token punctuation">,</span> <span class="token number">5</span><span class="token punctuation">)</span><span class="token punctuation">,</span> np<span class="token punctuation">.</span>uint8<span class="token punctuation">)</span>  
+		binary <span class="token operator">=</span> cv2<span class="token punctuation">.</span>morphologyEx<span class="token punctuation">(</span>binary<span class="token punctuation">,</span> cv2<span class="token punctuation">.</span>MORPH_OPEN<span class="token punctuation">,</span> kernel<span class="token punctuation">)</span>  
+		kernel <span class="token operator">=</span> np<span class="token punctuation">.</span>ones<span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token number">17</span><span class="token punctuation">,</span> <span class="token number">17</span><span class="token punctuation">)</span><span class="token punctuation">,</span> np<span class="token punctuation">.</span>uint8<span class="token punctuation">)</span>  
+		binary <span class="token operator">=</span> cv2<span class="token punctuation">.</span>morphologyEx<span class="token punctuation">(</span>binary<span class="token punctuation">,</span> cv2<span class="token punctuation">.</span>MORPH_CLOSE<span class="token punctuation">,</span> kernel<span class="token punctuation">)</span>
+		
+		masked_frame <span class="token operator">=</span> frame<span class="token punctuation">.</span>copy<span class="token punctuation">(</span><span class="token punctuation">)</span>  
+		masked_frame<span class="token punctuation">[</span>binary <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token number">0</span>  
+		cv2<span class="token punctuation">.</span>imshow<span class="token punctuation">(</span><span class="token string">"masked"</span><span class="token punctuation">,</span> masked_frame<span class="token punctuation">)</span>  <span class="token comment"># This is the final output</span>
+		cv2<span class="token punctuation">.</span>waitKey<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>
+</code></pre>
+<p><img src="https://raw.githubusercontent.com/m-parchami/Simple_Green_Screen/master/test.png" alt="Testing"></p>
+<p>As you can see the input camera image is too noisy. Want to see how our median approach fixed this noise? Here’s the background image:<br>
+<img src="https://raw.githubusercontent.com/m-parchami/Simple_Green_Screen/master/background.png" alt="Background"><br>
+There are a couple of things to notice here.<br>
+First, Notice the black squares on my left hand. It can be inferred that these locations where not seperated well from the background. (why?) Because they had same color with the exact same location in the background image. In contrast, my shirt is ok. I will provide ways to improve this issue in my later commits. Just a clue, we can use connected components, find the biggest(excluding the background), assuming it’s the main object, then after finding the contours we can simply make all the pixels in that area visible.</p>
+<p>The other problem is near the boundaries. They don’t look as smooth as they should. This is because the structuring element. while doing either dilation and erosion, we are using box filters. to improve this, we must refine these edges specifically. either use other structring elements or do some other smoothing (like fitting to contour to edges computed by other algorithms …). I’m kinda busy nowadays to complete this section. I promise to this in the very near future.</p>
+<p>Please refer to <a href="https://github.com/m-parchami/Simple_Green_Screen">github repository</a> for the source codes.</p>
+</div>
+</body>
+
+</html>
